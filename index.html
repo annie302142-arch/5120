@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BUG QUEST 昆蟲探險隊 - 數位互動輔助工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans TC"', 'sans-serif'],
+                    },
+                    colors: {
+                        forest: {
+                            50: '#f2f9f1',
+                            100: '#e1f2de',
+                            200: '#c5e5c0',
+                            500: '#4a9e42',
+                            600: '#387d32',
+                            700: '#2d6329',
+                            800: '#264f23',
+                            900: '#1f411d',
+                        },
+                        earth: {
+                            100: '#f5efe6',
+                            200: '#e8dcc8',
+                            600: '#8c6239',
+                            800: '#5c3d1e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f2f9f1;
+            background-image: radial-gradient(#c5e5c0 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
+        }
+        .card-shadow {
+            box-shadow: 0 10px 25px -5px rgba(45, 99, 41, 0.1), 0 8px 10px -6px rgba(45, 99, 41, 0.1);
+        }
+        .tab-active {
+            background-color: #387d32;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(56, 125, 50, 0.3);
+        }
+        /* 自訂捲軸 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e1f2de;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4a9e42;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- 頂部品牌標題列 -->
+    <header class="bg-gradient-to-r from-forest-800 via-forest-700 to-forest-600 text-white shadow-lg sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-4 py-3 sm:py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="bg-amber-400 text-forest-900 w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-inner font-black transform -rotate-3">
+                    🪲
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="bg-amber-400/20 text-amber-300 text-xs font-bold px-2 py-0.5 rounded-full border border-amber-400/30">BUGTOPIA</span>
+                        <h1 class="text-xl sm:text-2xl font-black tracking-wide">BUG QUEST 昆蟲探險隊</h1>
+                    </div>
+                    <p class="text-xs sm:text-sm text-forest-100 mt-0.5">翻開每一張牌，發現昆蟲大世界！｜數位輔助工具</p>
+                </div>
+            </div>
+            
+            <!-- 快捷抽牌事件模擬器按鈕 -->
+            <button onclick="openEventModal()" class="bg-amber-400 hover:bg-amber-300 text-forest-900 font-bold text-sm px-4 py-2 rounded-xl shadow transition flex items-center gap-1.5 active:scale-95">
+                <span>🃏</span> <span>事件牌效果查詢</span>
+            </button>
+        </div>
+
+        <!-- 導覽分頁列 -->
+        <nav class="bg-forest-900/40 backdrop-blur-sm border-t border-white/10">
+            <div class="max-w-5xl mx-auto px-2 sm:px-4 flex overflow-x-auto py-2 gap-2 no-scrollbar">
+                <button onclick="switchTab('rules')" id="tab-rules" class="tab-btn tab-active flex-1 min-w-[100px] py-2.5 px-3 rounded-xl font-bold text-sm sm:text-base transition-all flex items-center justify-center gap-1.5">
+                    <span>📖</span> <span>遊戲說明</span>
+                </button>
+                <button onclick="switchTab('dex')" id="tab-dex" class="tab-btn bg-white/10 hover:bg-white/20 text-white flex-1 min-w-[100px] py-2.5 px-3 rounded-xl font-bold text-sm sm:text-base transition-all flex items-center justify-center gap-1.5">
+                    <span>🦋</span> <span>昆蟲圖鑑</span>
+                </button>
+                <button onclick="switchTab('quiz')" id="tab-quiz" class="tab-btn bg-white/10 hover:bg-white/20 text-white flex-1 min-w-[100px] py-2.5 px-3 rounded-xl font-bold text-sm sm:text-base transition-all flex items-center justify-center gap-1.5">
+                    <span>❓</span> <span>昆蟲知識</span>
+                </button>
+                <button onclick="switchTab('score')" id="tab-score" class="tab-btn bg-white/10 hover:bg-white/20 text-white flex-1 min-w-[100px] py-2.5 px-3 rounded-xl font-bold text-sm sm:text-base transition-all flex items-center justify-center gap-1.5">
+                    <span>🏆</span> <span>分數紀錄</span>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- 主要內容區塊 -->
+    <main class="flex-1 max-w-5xl w-full mx-auto px-4 py-6">
+
+        <!-- ==================== 1. 遊戲說明分頁 ==================== -->
+        <section id="view-rules" class="tab-view space-y-6">
+            <!-- 撲克牌能量對照表 -->
+            <div class="bg-white rounded-3xl p-5 sm:p-6 card-shadow border border-forest-100">
+                <h2 class="text-xl font-black text-forest-800 flex items-center gap-2 mb-4">
+                    <span class="bg-forest-100 p-2 rounded-xl text-lg">🃏</span> 撲克牌自然能量與事件設定
+                </h2>
+                <p class="text-sm text-slate-600 mb-4">使用標準撲克牌 52 張（不含鬼牌）。<strong class="text-forest-700">A～10 為一般能量牌</strong>，依照花色收集資源；抽到 <strong class="text-rose-600">J、Q、K</strong> 則會觸發自然環境事件！</p>
+                
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                    <div class="bg-rose-50 border border-rose-200 rounded-2xl p-3.5 text-center">
+                        <div class="text-3xl mb-1 text-rose-600">♥</div>
+                        <div class="font-bold text-rose-900">紅心 (A~10)</div>
+                        <div class="text-xs font-bold bg-rose-200/70 text-rose-800 px-2 py-0.5 rounded-full inline-block mt-1">🌸 花蜜能量</div>
+                    </div>
+                    <div class="bg-slate-100 border border-slate-300 rounded-2xl p-3.5 text-center">
+                        <div class="text-3xl mb-1 text-slate-800">♠</div>
+                        <div class="font-bold text-slate-900">黑桃 (A~10)</div>
+                        <div class="text-xs font-bold bg-slate-300/70 text-slate-800 px-2 py-0.5 rounded-full inline-block mt-1">🌲 森林能量</div>
+                    </div>
+                    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 text-center">
+                        <div class="text-3xl mb-1 text-amber-500">♦</div>
+                        <div class="font-bold text-amber-900">方塊 (A~10)</div>
+                        <div class="text-xs font-bold bg-amber-200/70 text-amber-800 px-2 py-0.5 rounded-full inline-block mt-1">☀️ 陽光能量</div>
+                    </div>
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5 text-center">
+                        <div class="text-3xl mb-1 text-emerald-700">♣</div>
+                        <div class="font-bold text-emerald-900">梅花 (A~10)</div>
+                        <div class="text-xs font-bold bg-emerald-200/70 text-emerald-800 px-2 py-0.5 rounded-full inline-block mt-1">🌿 植物能量</div>
+                    </div>
+                </div>
+
+                <!-- J Q K 事件區 -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="bg-gradient-to-br from-sky-50 to-slate-100 border border-sky-200 rounded-2xl p-3.5 flex items-center gap-3">
+                        <div class="w-10 h-12 bg-white border-2 border-sky-400 rounded-lg flex items-center justify-center font-black text-xl text-sky-700 shadow-sm shrink-0">J</div>
+                        <div>
+                            <div class="font-bold text-sky-900">💨 強風事件</div>
+                            <div class="text-xs text-slate-600 mt-0.5">暫存區能量全部吹散失去，回合結束！</div>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-indigo-50 to-slate-100 border border-indigo-200 rounded-2xl p-3.5 flex items-center gap-3">
+                        <div class="w-10 h-12 bg-white border-2 border-indigo-400 rounded-lg flex items-center justify-center font-black text-xl text-indigo-700 shadow-sm shrink-0">Q</div>
+                        <div>
+                            <div class="font-bold text-indigo-900">⛈️ 暴雨事件</div>
+                            <div class="text-xs text-slate-600 mt-0.5">暫存區能量全數流失，回合結束！</div>
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-orange-50 to-slate-100 border border-orange-200 rounded-2xl p-3.5 flex items-center gap-3">
+                        <div class="w-10 h-12 bg-white border-2 border-orange-400 rounded-lg flex items-center justify-center font-black text-xl text-orange-700 shadow-sm shrink-0">K</div>
+                        <div>
+                            <div class="font-bold text-orange-900">🍂 棲地變化</div>
+                            <div class="text-xs text-slate-600 mt-0.5">暫存區能量無法保留，回合結束！</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 遊戲六步驟流程 -->
+            <div class="bg-white rounded-3xl p-5 sm:p-6 card-shadow border border-forest-100">
+                <h2 class="text-xl font-black text-forest-800 flex items-center gap-2 mb-4">
+                    <span class="bg-forest-100 p-2 rounded-xl text-lg">🧭</span> 探險隊行動步驟 (STEP 1 ~ 6)
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex gap-3.5 p-4 rounded-2xl bg-forest-50/70 border border-forest-100">
+                        <div class="bg-forest-600 text-white font-black text-xs px-2.5 py-1 rounded-lg h-fit shrink-0">STEP 1</div>
+                        <div>
+                            <h3 class="font-bold text-forest-900">遊戲準備</h3>
+                            <p class="text-sm text-slate-600 mt-1">洗勻 52 張撲克牌，每位玩家確認探索目標，並決定起始探險順序。</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3.5 p-4 rounded-2xl bg-forest-50/70 border border-forest-100">
+                        <div class="bg-forest-600 text-white font-black text-xs px-2.5 py-1 rounded-lg h-fit shrink-0">STEP 2</div>
+                        <div>
+                            <h3 class="font-bold text-forest-900">抽取撲克牌</h3>
+                            <p class="text-sm text-slate-600 mt-1">輪到你時翻開一張牌。若為 A～10，放入「暫存區」累積對應花色能量。</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3.5 p-4 rounded-2xl bg-forest-50/70 border border-forest-100">
+                        <div class="bg-forest-600 text-white font-black text-xs px-2.5 py-1 rounded-lg h-fit shrink-0">STEP 3</div>
+                        <div>
+                            <h3 class="font-bold text-forest-900">風險評估：繼續或停止</h3>
+                            <p class="text-sm text-slate-600 mt-1">你可以選擇「繼續抽牌」累積更多能量，或見好就收「停止抽牌」，將暫存區能量移入「安全區」。</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3.5 p-4 rounded-2xl bg-rose-50/70 border border-rose-100">
+                        <div class="bg-rose-600 text-white font-black text-xs px-2.5 py-1 rounded-lg h-fit shrink-0">STEP 4</div>
+                        <div>
+                            <h3 class="font-bold text-rose-900">遭遇自然事件</h3>
+                            <p class="text-sm text-slate-600 mt-1">若不幸抽到 <strong>J、Q、K</strong>，暫存區的能量全部失去，本回合強制結束！（安全區不受影響）</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3.5 p-4 rounded-2xl bg-amber-50/70 border border-amber-100">
+                        <div class="bg-amber-600 text-white font-black text-xs px-2.5 py-1 rounded-lg h-fit shrink-0">STEP 5</div>
+                        <div>
+                            <h3 class="font-bold text-amber-900">完成昆蟲探索</h3>
+                            <p class="text-sm text-slate-600 mt-1">消耗「安全區」對應的能量條件，即可完成該昆蟲探索，並抽取一題「昆蟲知識題」。</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3.5 p-4 rounded-2xl bg-amber-50/70 border border-amber-100">
+                        <div class="bg-amber-600 text-white font-black text-xs px-2.5 py-1 rounded-lg h-fit shrink-0">STEP 6</div>
+                        <div>
+                            <h3 class="font-bold text-amber-900">計算探險分數</h3>
+                            <p class="text-sm text-slate-600 mt-1">獲得昆蟲基本分數（3分或5分），答對知識題還可額外獲得 <strong class="text-amber-700">+1 分獎勵</strong>！</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 2. 昆蟲圖鑑與探索條件分頁 ==================== -->
+        <section id="view-dex" class="tab-view hidden space-y-5">
+            <div class="bg-white rounded-3xl p-5 sm:p-6 card-shadow border border-forest-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-black text-forest-800 flex items-center gap-2">
+                        <span>🦋</span> 昆蟲探索任務與生態圖鑑
+                    </h2>
+                    <p class="text-sm text-slate-600 mt-1">查看每種昆蟲所需的「安全區能量組合」，點擊卡片可查看詳細生態習性！</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="filterInsects('all')" class="filter-btn bg-forest-600 text-white text-xs font-bold px-3 py-1.5 rounded-full">全部 (6)</button>
+                    <button onclick="filterInsects(3)" class="filter-btn bg-forest-100 text-forest-800 hover:bg-forest-200 text-xs font-bold px-3 py-1.5 rounded-full">基礎 3分</button>
+                    <button onclick="filterInsects(5)" class="filter-btn bg-forest-100 text-forest-800 hover:bg-forest-200 text-xs font-bold px-3 py-1.5 rounded-full">進階 5分</button>
+                </div>
+            </div>
+
+            <!-- 昆蟲卡片網格 -->
+            <div id="insect-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <!-- 由 JS 動態渲染 -->
+            </div>
+        </section>
+
+        <!-- ==================== 3. 昆蟲知識問答分頁 ==================== -->
+        <section id="view-quiz" class="tab-view hidden">
+            <div class="max-w-2xl mx-auto bg-white rounded-3xl p-6 sm:p-8 card-shadow border border-forest-100">
+                <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                    <div>
+                        <span class="bg-amber-100 text-amber-800 text-xs font-black px-3 py-1 rounded-full">STEP 5 任務挑戰</span>
+                        <h2 class="text-xl sm:text-2xl font-black text-forest-900 mt-2">昆蟲生態知識考驗</h2>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xs text-slate-500 font-bold">答對獎勵</div>
+                        <div class="text-2xl font-black text-amber-500">+1 分</div>
+                    </div>
+                </div>
+
+                <!-- 題目顯示區 -->
+                <div id="quiz-container">
+                    <div class="mb-4 flex items-center justify-between text-xs font-bold text-slate-500">
+                        <span id="quiz-category" class="bg-forest-100 text-forest-700 px-2.5 py-1 rounded-lg">主題：蝴蝶</span>
+                        <span id="quiz-counter">第 1 / 12 題</span>
+                    </div>
+                    
+                    <h3 id="quiz-question" class="text-lg sm:text-xl font-bold text-slate-800 leading-relaxed mb-6">
+                        題目載入中...
+                    </h3>
+
+                    <div id="quiz-options" class="space-y-3">
+                        <!-- 選項按鈕由 JS 生成 -->
+                    </div>
+
+                    <!-- 解答與解析回饋區 -->
+                    <div id="quiz-feedback" class="hidden mt-6 p-4 rounded-2xl border">
+                        <div id="quiz-result-title" class="font-black text-lg mb-1"></div>
+                        <p id="quiz-explanation" class="text-sm leading-relaxed"></p>
+                    </div>
+
+                    <!-- 控制按鈕 -->
+                    <div class="mt-6 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                        <button onclick="randomQuiz()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-4 py-2.5 rounded-xl text-sm transition flex items-center gap-1.5">
+                            <span>🎲</span> <span>隨機抽一題</span>
+                        </button>
+                        <button onclick="nextQuiz()" class="bg-forest-600 hover:bg-forest-700 text-white font-bold px-6 py-2.5 rounded-xl text-sm shadow transition flex items-center gap-1.5">
+                            <span>下一題</span> <span>➡️</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== 4. 分數紀錄與能量輔助器分頁 ==================== -->
+        <section id="view-score" class="tab-view hidden space-y-6">
+            <!-- 新增玩家與控制列 -->
+            <div class="bg-white rounded-3xl p-5 card-shadow border border-forest-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <div class="flex gap-2 flex-1">
+                    <input type="text" id="new-player-name" placeholder="輸入探險隊員名稱..." class="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-forest-500 focus:ring-2 focus:ring-forest-200" onkeypress="if(event.key==='Enter') addPlayer()">
+                    <button onclick="addPlayer()" class="bg-forest-600 hover:bg-forest-700 text-white font-bold px-4 py-2.5 rounded-xl text-sm shadow transition shrink-0">
+                        + 新增隊員
+                    </button>
+                </div>
+                <button onclick="openResetConfirm()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold px-4 py-2.5 rounded-xl text-sm transition">
+                    🔄 重置本局紀錄
+                </button>
+            </div>
+
+            <!-- 玩家計分板列表 -->
+            <div id="players-container" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <!-- 由 JS 動態渲染玩家卡片 -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 頁尾資訊 -->
+    <footer class="bg-white border-t border-forest-100 py-4 px-4 mt-8">
+        <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-2">
+            <div>BUGTOPIA 互動育樂應用設計 － 撲克牌育樂桌遊《BUG QUEST 昆蟲探險隊》</div>
+            <div>提示：分數紀錄會自動儲存在您的瀏覽器中</div>
+        </div>
+    </footer>
+
+    <!-- ==================== 彈窗：昆蟲詳細生態圖鑑 ==================== -->
+    <div id="insect-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4" onclick="if(event.target===this) closeInsectModal()">
+        <div class="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl transform transition-all">
+            <div id="modal-header-bg" class="p-6 text-white relative">
+                <button onclick="closeInsectModal()" class="absolute top-4 right-4 bg-black/20 hover:bg-black/40 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold">✕</button>
+                <div class="flex items-center gap-4">
+                    <div id="modal-emoji" class="text-6xl bg-white/20 w-20 h-20 rounded-2xl flex items-center justify-center shadow-inner">🦋</div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span id="modal-score-badge" class="bg-amber-400 text-forest-950 text-xs font-black px-2.5 py-0.5 rounded-full">基本分 3 分</span>
+                            <span id="modal-habitat-tag" class="bg-white/20 text-white text-xs px-2.5 py-0.5 rounded-full">花叢草地</span>
+                        </div>
+                        <h3 id="modal-name" class="text-2xl font-black mt-1">蝴蝶</h3>
+                        <p id="modal-latin" class="text-xs text-white/80 italic">Lepidoptera</p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="bg-forest-50 border border-forest-200 rounded-2xl p-3.5 flex items-center justify-between">
+                    <span class="text-sm font-bold text-forest-900">所需探索能量：</span>
+                    <div id="modal-energy" class="flex gap-2 font-black text-base"></div>
+                </div>
+                <div>
+                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-wider mb-1">外型與身體特徵</h4>
+                    <p id="modal-appearance" class="text-sm text-slate-700 leading-relaxed"></p>
+                </div>
+                <div>
+                    <h4 class="text-xs font-black text-slate-400 uppercase tracking-wider mb-1">食物與生活習性</h4>
+                    <p id="modal-habits" class="text-sm text-slate-700 leading-relaxed"></p>
+                </div>
+                <div class="bg-amber-50 border border-amber-200 rounded-2xl p-3.5">
+                    <h4 class="text-xs font-black text-amber-800 mb-1">💡 探險家小知識</h4>
+                    <p id="modal-fact" class="text-xs text-amber-900 leading-relaxed"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 彈窗：事件牌效果快速判定 ==================== -->
+    <div id="event-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4" onclick="if(event.target===this) closeEventModal()">
+        <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-black text-slate-800">🃏 抽到 J / Q / K 事件牌？</h3>
+                <button onclick="closeEventModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl">✕</button>
+            </div>
+            <p class="text-sm text-slate-600 mb-4">點擊你剛翻開的人頭牌，查看自然環境事件效果：</p>
+            <div class="grid grid-cols-3 gap-3 mb-4">
+                <button onclick="showEventDetail('J')" class="py-4 rounded-2xl border-2 border-sky-200 bg-sky-50 hover:bg-sky-100 text-center transition">
+                    <div class="text-2xl font-black text-sky-700">J</div>
+                    <div class="text-xs font-bold text-sky-900 mt-1">強風事件</div>
+                </button>
+                <button onclick="showEventDetail('Q')" class="py-4 rounded-2xl border-2 border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-center transition">
+                    <div class="text-2xl font-black text-indigo-700">Q</div>
+                    <div class="text-xs font-bold text-indigo-900 mt-1">暴雨事件</div>
+                </button>
+                <button onclick="showEventDetail('K')" class="py-4 rounded-2xl border-2 border-orange-200 bg-orange-50 hover:bg-orange-100 text-center transition">
+                    <div class="text-2xl font-black text-orange-700">K</div>
+                    <div class="text-xs font-bold text-orange-900 mt-1">棲地變化</div>
+                </button>
+            </div>
+            <div id="event-detail-box" class="bg-rose-50 border border-rose-200 rounded-2xl p-4 text-sm text-rose-900">
+                請點選上方 J、Q 或 K 檢視事件說明。
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 彈窗：重置確認 ==================== -->
+    <div id="reset-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center">
+            <div class="text-4xl mb-2">⚠️</div>
+            <h3 class="text-lg font-black text-slate-800">確定要重置所有分數嗎？</h3>
+            <p class="text-sm text-slate-600 mt-1 mb-5">這將會清空所有探險隊員目前的分數與探索紀錄。</p>
+            <div class="flex gap-3">
+                <button onclick="closeResetConfirm()" class="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 font-bold text-slate-700 text-sm">取消</button>
+                <button onclick="confirmResetScores()" class="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 font-bold text-white text-sm">確定重置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示訊息 Toast -->
+    <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-sm font-bold px-5 py-3 rounded-full shadow-xl opacity-0 pointer-events-none transition-opacity duration-300 z-50">
+        訊息提示
+    </div>
+
+    <script>
+        // ==================== 1. 昆蟲資料庫 (對應 P.6 規格) ====================
+        const insectsData = [
+            {
+                id: 'butterfly',
+                name: '蝴蝶',
+                latin: 'Lepidoptera',
+                emoji: '🦋',
+                score: 3,
+                habitat: '花叢與陽光草地',
+                colorClass: 'from-pink-500 to-rose-500',
+                energy: [
+                    { suit: '♥', name: '花蜜', count: 2, color: 'text-rose-600 bg-rose-50 border-rose-200' },
+                    { suit: '♦', name: '陽光', count: 1, color: 'text-amber-600 bg-amber-50 border-amber-200' }
+                ],
+                appearance: '擁有兩對佈滿細小鱗片的美麗翅膀，頭部有一對棒狀觸角，以及平時捲曲、吸食時伸長的虹吸式口器。',
+                habits: '白天活動（日行性），喜歡在陽光充足的花叢間飛舞吸食花蜜。成長過程會經歷卵、幼蟲、蛹、成蟲的「完全變態」。',
+                fact: '蝴蝶的味覺器官其實長在「腳」上！當牠們停在花朵或葉片上時，用腳踩一踩就能知道好不好吃。'
+            },
+            {
+                id: 'ladybug',
+                name: '瓢蟲',
+                latin: 'Coccinellidae',
+                emoji: '🐞',
+                score: 3,
+                habitat: '農田與灌木植物',
+                colorClass: 'from-red-500 to-orange-500',
+                energy: [
+                    { suit: '♣', name: '植物', count: 2, color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
+                    { suit: '♦', name: '陽光', count: 1, color: 'text-amber-600 bg-amber-50 border-amber-200' }
+                ],
+                appearance: '身體呈半球形，背上有一對堅硬且色彩鮮豔的鞘翅（常見紅底黑點或黃底黑點），遇到危險時會裝死並分泌黃色臭液。',
+                habits: '大多數肉食性瓢蟲（如七星瓢蟲）以蚜蟲、介殼蟲為食，是農夫眼中的「益蟲」；少數植食性瓢蟲則以植物葉片為食。',
+                fact: '瓢蟲背上的斑點數量並「不能」用來判斷牠的年齡喔！斑點數量是隨著瓢蟲的「種類」而固定的。'
+            },
+            {
+                id: 'bee',
+                name: '蜜蜂',
+                latin: 'Anthophila',
+                emoji: '🐝',
+                score: 3,
+                habitat: '百花盛開的草地與樹林',
+                colorClass: 'from-amber-400 to-yellow-600',
+                energy: [
+                    { suit: '♥', name: '花蜜', count: 2, color: 'text-rose-600 bg-rose-50 border-rose-200' },
+                    { suit: '♣', name: '植物', count: 1, color: 'text-emerald-700 bg-emerald-50 border-emerald-200' }
+                ],
+                appearance: '身體分頭、胸、腹三部分，全身長滿細毛方便沾附花粉，後腳特化出「花粉籃」，腹部末端有防禦用的螫針。',
+                habits: '高度社會化的昆蟲，蜂群分為蜂后、雄蜂與工蜂。工蜂負責採集花蜜與花粉，同時幫植物完成授粉工作。',
+                fact: '偵察蜂發現蜜源後，會回到蜂巢跳「8字舞」或「圓圈舞」，用跳舞的方向與擺動速度告訴同伴花朵的方位與距離！'
+            },
+            {
+                id: 'mantis',
+                name: '螳螂',
+                latin: 'Mantodea',
+                emoji: '🦗',
+                score: 3,
+                habitat: '陽光照射的草叢與枝葉間',
+                colorClass: 'from-lime-500 to-green-600',
+                energy: [
+                    { suit: '♠', name: '森林', count: 1, color: 'text-slate-800 bg-slate-100 border-slate-300' },
+                    { suit: '♦', name: '陽光', count: 1, color: 'text-amber-600 bg-amber-50 border-amber-200' }
+                ],
+                appearance: '三角形的頭部可以靈活轉動，兩側有一對大複眼；最明顯的特徵是前足特化成鐮刀狀的「捕捉足」，上面長滿銳利棘刺。',
+                habits: '純肉食性的伏擊獵手，常利用綠色或褐色的保護色靜止偽裝在枝葉上，等獵物靠近時瞬間伸出前足夾住。',
+                fact: '螳螂是少數頭部可以左右轉動高達 180 度的昆蟲，讓牠不用移動身體就能觀察四周的動靜。'
+            },
+            {
+                id: 'beetle',
+                name: '獨角仙',
+                latin: 'Trypoxylus dichotomus',
+                emoji: '🪲',
+                score: 5,
+                habitat: '闊葉林與腐植土森林',
+                colorClass: 'from-amber-800 to-stone-900',
+                energy: [
+                    { suit: '♠', name: '森林', count: 2, color: 'text-slate-800 bg-slate-100 border-slate-300' },
+                    { suit: '♣', name: '植物', count: 2, color: 'text-emerald-700 bg-emerald-50 border-emerald-200' }
+                ],
+                appearance: '體型壯碩，外骨骼堅硬呈深褐色至黑褐色。雄蟲頭部有巨大的分叉觭角，前胸背板也有小角，雌蟲則沒有角。',
+                habits: '夜行性甲蟲，白天常躲在落葉下或樹幹高處，晚上聚集在光臘樹上吸食樹液，雄蟲會用長角互相頂撞爭奪地盤與配偶。',
+                fact: '獨角仙的幼蟲（俗稱雞母蟲）生活在腐植土裡，以腐爛的木頭和落葉為食，是大自然重要的分解者！'
+            },
+            {
+                id: 'dragonfly',
+                name: '蜻蜓',
+                latin: 'Anisoptera',
+                emoji: '🚁',
+                score: 5,
+                habitat: '池塘水域與陽光花草區',
+                colorClass: 'from-sky-500 to-teal-600',
+                energy: [
+                    { suit: '♦', name: '陽光', count: 2, color: 'text-amber-600 bg-amber-50 border-amber-200' },
+                    { suit: '♥', name: '花蜜', count: 2, color: 'text-rose-600 bg-rose-50 border-rose-200' }
+                ],
+                appearance: '擁有幾乎佔滿整個頭部的巨大複眼、細長的腹部，以及兩對網狀脈絡清晰的透明翅膀，飛行能力極強。',
+                habits: '成蟲在空中捕食蚊子、蒼蠅等小飛蟲；幼蟲稱為「水蠆」，生活在水中用鰓呼吸，同樣是水中的肉食性高手。',
+                fact: '蜻蜓是昆蟲界的飛行冠軍，不僅能高速前進，還能定點懸停、急轉彎，甚至「倒退飛行」！'
+            }
+        ];
+
+        // ==================== 2. 昆蟲知識題庫 (12題) ====================
+        const quizData = [
+            {
+                category: '🦋 蝴蝶',
+                question: '蝴蝶主要用身體的哪一個部位來品嚐花朵或葉片的味道？',
+                options: ['觸角', '腳部', '翅膀', '複眼'],
+                answer: 1,
+                explanation: '蝴蝶的味覺受器長在「腳」上！當牠停在植物上踩踏時，就能立刻分辨這株植物適不適合吸食或產卵。'
+            },
+            {
+                category: '🐞 瓢蟲',
+                question: '關於瓢蟲背上的「斑點數量」，下列哪一個敘述是正確的？',
+                options: ['斑點越多代表年紀越大', '每多一歲就會長出一顆斑點', '斑點數量是依瓢蟲的種類而固定的', '公瓢蟲才有斑點，母瓢蟲沒有'],
+                answer: 2,
+                explanation: '瓢蟲背上的斑點數量與年齡無關，而是取決於牠的「品種」（例如七星瓢蟲固定有7顆斑點）。'
+            },
+            {
+                category: '🐝 蜜蜂',
+                question: '當偵察蜂找到豐富的花蜜來源時，會用什麼方式告訴同伴方向與距離？',
+                options: ['發出高頻率叫聲', '跳8字舞或圓圈舞', '分泌特殊顏色液體', '用觸角敲擊蜂巢'],
+                answer: 1,
+                explanation: '蜜蜂會透過跳「圓圈舞」（表示蜜源很近）或「8字舞」（透過擺尾角度與太陽夾角表示方向）來傳遞情報！'
+            },
+            {
+                category: '🦗 螳螂',
+                question: '螳螂用來捕捉獵物的特化「鐮刀狀捕捉足」，是牠的哪一對腳？',
+                options: ['前足（第一對腳）', '中足（第二對腳）', '後足（第三對腳）', '三對腳都是鐮刀狀'],
+                answer: 0,
+                explanation: '螳螂的第一對腳（前足）特化成佈滿棘刺的捕捉足，中足與後足則用來支撐身體與行走。'
+            },
+            {
+                category: '🪲 獨角仙',
+                question: '如何快速分辨眼前的獨角仙是「雄蟲」還是「雌蟲」？',
+                options: ['看身體顏色是不是黑色', '雄蟲頭部有巨大的分叉長角，雌蟲沒有', '雌蟲有翅膀，雄蟲沒有翅膀', '雄蟲體型比雌蟲小很多'],
+                answer: 1,
+                explanation: '只有雄性獨角仙頭部與前胸背板會長出威風的觭角，用來在樹幹上爭奪地盤與配偶；雌蟲則沒有角。'
+            },
+            {
+                category: '🚁 蜻蜓',
+                question: '蜻蜓的幼蟲階段生活在水中，牠們在生物學上的名稱叫做什麼？',
+                options: ['孑孓', '水蠆（ㄔㄞˋ）', '雞母蟲', '水黽'],
+                answer: 1,
+                explanation: '蜻蜓與豆娘的幼蟲稱為「水蠆」，生活在池塘或溪流中，羽化後才會變成在空中飛翔的蜻蜓。'
+            },
+            {
+                category: '🌿 昆蟲構造',
+                question: '昆蟲成蟲的身體分為哪三個主要部分，並且有幾隻腳？',
+                options: ['頭、腹兩部分，8隻腳', '頭、胸、腹三部分，6隻腳', '頭、胸、腹三部分，8隻腳', '頭、軀幹兩部分，6隻腳'],
+                answer: 1,
+                explanation: '所有昆蟲成蟲的身體都分為「頭、胸、腹」三部分，且「6隻腳」全部長在胸部上（蜘蛛有8隻腳，不是昆蟲喔！）。'
+            },
+            {
+                category: '🪲 獨角仙',
+                question: '獨角仙的幼蟲（雞母蟲）在森林生態系中扮演什麼重要角色？',
+                options: ['捕食害蟲的掠食者', '幫花朵授粉的傳粉者', '吃腐植土與腐木的分解者', '吸食樹汁的寄生者'],
+                answer: 2,
+                explanation: '獨角仙幼蟲住在腐植土中，專門分解落葉與枯木，讓養分回歸土壤，是大自然重要的清道夫！'
+            },
+            {
+                category: '🐞 瓢蟲',
+                question: '大部分肉食性瓢蟲（如七星瓢蟲）最喜歡吃哪一種農業害蟲？',
+                options: ['獨角仙幼蟲', '蚜蟲', '蜜蜂', '蝴蝶'],
+                answer: 1,
+                explanation: '一隻七星瓢蟲一天可以吃掉數十隻吸食植物汁液的「蚜蟲」，因此被稱為農作物的守護神。'
+            },
+            {
+                category: '🦋 蝴蝶',
+                question: '蝴蝶的一生會經過「卵 → 幼蟲 → 蛹 → 成蟲」四個階段，這種成長方式稱為什麼？',
+                options: ['不完全變態', '完全變態', '無變態', '半變態'],
+                answer: 1,
+                explanation: '成長過程中有經過「蛹期」的昆蟲（如蝴蝶、蜜蜂、獨角仙、瓢蟲）稱為「完全變態」；沒有蛹期的（如螳螂、蜻蜓）則為不完全變態。'
+            },
+            {
+                category: '🚁 蜻蜓',
+                question: '下列哪一項「不是」蜻蜓的飛行超能力？',
+                options: ['在空中定點懸停', '向後倒退飛行', '收起翅膀在水中游泳', '高速急轉彎'],
+                answer: 2,
+                explanation: '蜻蜓是飛行高手，能懸停、急轉甚至倒退飛，但成蟲無法在水中游泳（只有幼蟲水蠆住在水中）。'
+            },
+            {
+                category: '🐝 蜜蜂',
+                question: '工蜂的後腳有一個特殊構造，用來把採集到的花粉打包帶回蜂巢，這個構造叫什麼？',
+                options: ['花粉籃', '蜜囊', '觸角刷', '採集袋'],
+                answer: 0,
+                explanation: '工蜂後腳脛節外側凹陷且周圍有長毛，形成「花粉籃」，可以把混有花蜜的花粉團牢牢固定帶回家！'
+            }
+        ];
+
+        // ==================== 3. 狀態管理與初始化 ====================
+        let currentQuizIndex = 0;
+        let quizAnswered = false;
+        
+        // 玩家分數與能量資料結構
+        let players = JSON.parse(localStorage.getItem('bugQuest_players')) || [
+            { id: 1, name: '探險家 1 號', score: 0, completedBugs: [], bonusCount: 0, safeEnergy: { '♥': 0, '♠': 0, '♦': 0, '♣': 0 } },
+            { id: 2, name: '探險家 2 號', score: 0, completedBugs: [], bonusCount: 0, safeEnergy: { '♥': 0, '♠': 0, '♦': 0, '♣': 0 } }
+        ];
+
+        function savePlayers() {
+            localStorage.setItem('bugQuest_players', JSON.stringify(players));
+        }
+
+        // ==================== 4. 分頁切換邏輯 ====================
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-view').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`view-${tabName}`).classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('tab-active');
+                btn.classList.add('bg-white/10', 'hover:bg-white/20');
+            });
+            const activeBtn = document.getElementById(`tab-${tabName}`);
+            activeBtn.classList.add('tab-active');
+            activeBtn.classList.remove('bg-white/10', 'hover:bg-white/20');
+        }
+
+        // ==================== 5. 昆蟲圖鑑渲染與篩選 ====================
+        function renderInsects(filterScore = 'all') {
+            const grid = document.getElementById('insect-grid');
+            grid.innerHTML = '';
+
+            const filtered = filterScore === 'all' 
+                ? insectsData 
+                : insectsData.filter(bug => bug.score === filterScore);
+
+            filtered.forEach(bug => {
+                const energyBadges = bug.energy.map(e => `
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl border text-xs font-black ${e.color}">
+                        <span>${e.count}${e.suit}</span>
+                        <span class="opacity-80 font-medium">${e.name}</span>
+                    </span>
+                `).join('');
+
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-3xl overflow-hidden card-shadow border border-forest-100 hover:-translate-y-1 transition-all duration-200 flex flex-col cursor-pointer';
+                card.onclick = () => openInsectModal(bug);
+
+                card.innerHTML = `
+                    <div class="bg-gradient-to-r ${bug.colorClass} p-4 text-white flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <span class="text-4xl bg-white/20 w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner">${bug.emoji}</span>
+                            <div>
+                                <h3 class="text-lg font-black">${bug.name}</h3>
+                                <div class="text-xs text-white/80">${bug.habitat}</div>
+                            </div>
+                        </div>
+                        <div class="bg-amber-400 text-forest-950 font-black px-3 py-1 rounded-full text-sm shadow">
+                            ${bug.score} 分
+                        </div>
+                    </div>
+                    <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
+                        <div>
+                            <div class="text-xs font-bold text-slate-400 mb-1.5">探索所需安全區能量：</div>
+                            <div class="flex flex-wrap gap-1.5">${energyBadges}</div>
+                        </div>
+                        <p class="text-xs text-slate-600 line-clamp-2 leading-relaxed">${bug.habits}</p>
+                        <div class="pt-2 border-t border-slate-100 text-right">
+                            <span class="text-xs font-bold text-forest-600 hover:text-forest-800">點擊查看生態詳情 →</span>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterInsects(score) {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-forest-600', 'text-white');
+                btn.classList.add('bg-forest-100', 'text-forest-800');
+            });
+            event.target.classList.remove('bg-forest-100', 'text-forest-800');
+            event.target.classList.add('bg-forest-600', 'text-white');
+            renderInsects(score);
+        }
+
+        function openInsectModal(bug) {
+            document.getElementById('modal-header-bg').className = `p-6 text-white relative bg-gradient-to-r ${bug.colorClass}`;
+            document.getElementById('modal-emoji').textContent = bug.emoji;
+            document.getElementById('modal-name').textContent = bug.name;
+            document.getElementById('modal-latin').textContent = bug.latin;
+            document.getElementById('modal-score-badge').textContent = `基本分 ${bug.score} 分`;
+            document.getElementById('modal-habitat-tag').textContent = bug.habitat;
+            document.getElementById('modal-appearance').textContent = bug.appearance;
+            document.getElementById('modal-habits').textContent = bug.habits;
+            document.getElementById('modal-fact').textContent = bug.fact;
+
+            document.getElementById('modal-energy').innerHTML = bug.energy.map(e => `
+                <span class="px-3 py-1 rounded-xl border ${e.color}">${e.count}${e.suit} ${e.name}</span>
+            `).join('');
+
+            const modal = document.getElementById('insect-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeInsectModal() {
+            const modal = document.getElementById('insect-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // ==================== 6. 昆蟲知識問答系統 ====================
+        function renderQuiz() {
+            quizAnswered = false;
+            const q = quizData[currentQuizIndex];
+            document.getElementById('quiz-category').textContent = q.category;
+            document.getElementById('quiz-counter').textContent = `第 ${currentQuizIndex + 1} / ${quizData.length} 題`;
+            document.getElementById('quiz-question').textContent = q.question;
+            
+            const feedback = document.getElementById('quiz-feedback');
+            feedback.classList.add('hidden');
+
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+
+            const labels = ['A', 'B', 'C', 'D'];
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'quiz-opt-btn w-full text-left p-4 rounded-2xl border-2 border-slate-200 hover:border-forest-500 hover:bg-forest-50 transition font-medium flex items-center gap-3';
+                btn.onclick = () => selectAnswer(idx);
+                btn.innerHTML = `
+                    <span class="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 font-black flex items-center justify-center shrink-0">${labels[idx]}</span>
+                    <span>${opt}</span>
+                `;
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectAnswer(selectedIndex) {
+            if (quizAnswered) return;
+            quizAnswered = true;
+
+            const q = quizData[currentQuizIndex];
+            const buttons = document.querySelectorAll('.quiz-opt-btn');
+            const feedback = document.getElementById('quiz-feedback');
+            const title = document.getElementById('quiz-result-title');
+            const explanation = document.getElementById('quiz-explanation');
+
+            buttons.forEach((btn, idx) => {
+                btn.disabled = true;
+                if (idx === q.answer) {
+                    btn.classList.remove('border-slate-200', 'hover:border-forest-500', 'hover:bg-forest-50');
+                    btn.classList.add('border-emerald-500', 'bg-emerald-50', 'text-emerald-900', 'font-bold');
+                } else if (idx === selectedIndex && selectedIndex !== q.answer) {
+                    btn.classList.remove('border-slate-200', 'hover:border-forest-500', 'hover:bg-forest-50');
+                    btn.classList.add('border-rose-400', 'bg-rose-50', 'text-rose-900');
+                }
+            });
+
+            feedback.classList.remove('hidden', 'bg-emerald-50', 'border-emerald-200', 'text-emerald-900', 'bg-rose-50', 'border-rose-200', 'text-rose-900');
+
+            if (selectedIndex === q.answer) {
+                feedback.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-900');
+                title.innerHTML = '🎉 答對了！獲得 +1 分知識獎勵！';
+                showToast('答對了！可至「分數紀錄」為該玩家加 +1 知識分');
+            } else {
+                feedback.classList.add('bg-rose-50', 'border-rose-200', 'text-rose-900');
+                title.innerHTML = '💡 差一點點！下次繼續加油！';
+            }
+            explanation.textContent = q.explanation;
+        }
+
+        function nextQuiz() {
+            currentQuizIndex = (currentQuizIndex + 1) % quizData.length;
+            renderQuiz();
+        }
+
+        function randomQuiz() {
+            let nextIdx;
+            do {
+                nextIdx = Math.floor(Math.random() * quizData.length);
+            } while (nextIdx === currentQuizIndex && quizData.length > 1);
+            currentQuizIndex = nextIdx;
+            renderQuiz();
+        }
+
+        // ==================== 7. 分數紀錄與安全區能量計數器 ====================
+        function renderPlayers() {
+            const container = document.getElementById('players-container');
+            container.innerHTML = '';
+
+            // 找出最高分
+            const maxScore = players.length > 0 ? Math.max(...players.map(p => p.score)) : 0;
+
+            players.forEach((player, index) => {
+                const isLeader = player.score > 0 && player.score === maxScore;
+                const card = document.createElement('div');
+                card.className = `bg-white rounded-3xl p-5 card-shadow border-2 ${isLeader ? 'border-amber-400' : 'border-forest-100'} space-y-4`;
+
+                // 已完成的昆蟲徽章
+                const completedBadges = player.completedBugs.length > 0 
+                    ? player.completedBugs.map((b, bIdx) => `
+                        <span class="inline-flex items-center gap-1 bg-forest-100 text-forest-800 text-xs font-bold px-2.5 py-1 rounded-full">
+                            ${b.emoji} ${b.name}(${b.score}分)
+                            <button onclick="removeBugFromPlayer(${player.id}, ${bIdx})" class="ml-1 text-forest-600 hover:text-rose-600">×</button>
+                        </span>
+                    `).join('')
+                    : '<span class="text-xs text-slate-400">尚未完成昆蟲探索任務</span>';
+
+                card.innerHTML = `
+                    <!-- 玩家標題與總分 -->
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-10 h-10 rounded-2xl bg-forest-600 text-white font-black flex items-center justify-center text-lg">
+                                ${index + 1}
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-1.5">
+                                    <h3 class="font-black text-lg text-slate-800">${player.name}</h3>
+                                    ${isLeader ? '<span class="bg-amber-100 text-amber-700 text-xs font-black px-2 py-0.5 rounded-full">👑 領先</span>' : ''}
+                                </div>
+                                <div class="text-xs text-slate-500">知識答對加分：${player.bonusCount} 次</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div class="text-right">
+                                <div class="text-xs text-slate-400 font-bold">目前總分</div>
+                                <div class="text-3xl font-black text-forest-700">${player.score}</div>
+                            </div>
+                            ${players.length > 1 ? `<button onclick="deletePlayer(${player.id})" class="text-slate-300 hover:text-rose-500 p-1" title="移除玩家">✕</button>` : ''}
+                        </div>
+                    </div>
+
+                    <!-- 安全區能量計數器 -->
+                    <div class="bg-slate-50 rounded-2xl p-3 border border-slate-200/70">
+                        <div class="text-xs font-bold text-slate-500 mb-2 flex justify-between">
+                            <span>🛡️ 安全區能量紀錄（輔助計算）</span>
+                            <button onclick="clearSafeEnergy(${player.id})" class="text-slate-400 hover:text-slate-600 underline">歸零</button>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2">
+                            ${renderEnergyCounter(player, '♥', 'text-rose-600', '花蜜')}
+                            ${renderEnergyCounter(player, '♠', 'text-slate-800', '森林')}
+                            ${renderEnergyCounter(player, '♦', 'text-amber-500', '陽光')}
+                            ${renderEnergyCounter(player, '♣', 'text-emerald-700', '植物')}
+                        </div>
+                    </div>
+
+                    <!-- 快速記錄完成任務與加分 -->
+                    <div>
+                        <div class="text-xs font-bold text-slate-500 mb-2">➕ 記錄完成探索 / 知識加分：</div>
+                        <div class="flex flex-wrap gap-1.5">
+                            ${insectsData.map(bug => `
+                                <button onclick="addBugScore(${player.id}, '${bug.id}')" class="bg-forest-50 hover:bg-forest-100 border border-forest-200 text-forest-900 text-xs font-bold px-2.5 py-1.5 rounded-xl transition active:scale-95">
+                                    ${bug.emoji} ${bug.name} +${bug.score}
+                                </button>
+                            `).join('')}
+                            <button onclick="addBonusScore(${player.id})" class="bg-amber-100 hover:bg-amber-200 border border-amber-300 text-amber-900 text-xs font-black px-3 py-1.5 rounded-xl transition active:scale-95">
+                                💡 知識題答對 +1
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 已達成探索清單 -->
+                    <div class="pt-2 border-t border-slate-100">
+                        <div class="text-xs font-bold text-slate-400 mb-1.5">已完成探索圖鑑：</div>
+                        <div class="flex flex-wrap gap-1.5">${completedBadges}</div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderEnergyCounter(player, suit, colorClass, label) {
+            const count = player.safeEnergy[suit] || 0;
+            return `
+                <div class="bg-white rounded-xl p-2 border border-slate-200 text-center">
+                    <div class="text-xs font-bold ${colorClass}">${suit} ${label}</div>
+                    <div class="font-black text-base my-1">${count}</div>
+                    <div class="flex justify-center gap-1">
+                        <button onclick="updateEnergy(${player.id}, '${suit}', -1)" class="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold text-xs">-</button>
+                        <button onclick="updateEnergy(${player.id}, '${suit}', 1)" class="w-6 h-6 rounded-lg bg-forest-100 hover:bg-forest-200 text-forest-800 font-bold text-xs">+</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateEnergy(playerId, suit, delta) {
+            const player = players.find(p => p.id === playerId);
+            if (!player) return;
+            player.safeEnergy[suit] = Math.max(0, (player.safeEnergy[suit] || 0) + delta);
+            savePlayers();
+            renderPlayers();
+        }
+
+        function clearSafeEnergy(playerId) {
+            const player = players.find(p => p.id === playerId);
+            if (!player) return;
+            player.safeEnergy = { '♥': 0, '♠': 0, '♦': 0, '♣': 0 };
+            savePlayers();
+            renderPlayers();
+        }
+
+        function addBugScore(playerId, bugId) {
+            const player = players.find(p => p.id === playerId);
+            const bug = insectsData.find(b => b.id === bugId);
+            if (!player || !bug) return;
+
+            player.score += bug.score;
+            player.completedBugs.push({ name: bug.name, emoji: bug.emoji, score: bug.score });
+            savePlayers();
+            renderPlayers();
+            showToast(`${player.name} 完成【${bug.name}】探索，獲得 +${bug.score} 分！請前往「昆蟲知識」抽一題挑戰！`);
+        }
+
+        function removeBugFromPlayer(playerId, bugIndex) {
+            const player = players.find(p => p.id === playerId);
+            if (!player) return;
+            const removed = player.completedBugs.splice(bugIndex, 1)[0];
+            if (removed) {
+                player.score = Math.max(0, player.score - removed.score);
+            }
+            savePlayers();
+            renderPlayers();
+        }
+
+        function addBonusScore(playerId) {
+            const player = players.find(p => p.id === playerId);
+            if (!player) return;
+            player.score += 1;
+            player.bonusCount += 1;
+            savePlayers();
+            renderPlayers();
+            showToast(`${player.name} 答對昆蟲知識題，獲得 +1 分獎勵！`);
+        }
+
+        function addPlayer() {
+            const input = document.getElementById('new-player-name');
+            const name = input.value.trim();
+            if (!name) {
+                showToast('請輸入探險隊員名稱！');
+                return;
+            }
+            players.push({
+                id: Date.now(),
+                name: name,
+                score: 0,
+                completedBugs: [],
+                bonusCount: 0,
+                safeEnergy: { '♥': 0, '♠': 0, '♦': 0, '♣': 0 }
+            });
+            input.value = '';
+            savePlayers();
+            renderPlayers();
+            showToast(`已新增探險隊員：${name}`);
+        }
+
+        function deletePlayer(playerId) {
+            players = players.filter(p => p.id !== playerId);
+            savePlayers();
+            renderPlayers();
+        }
+
+        // ==================== 8. 事件牌彈窗與重置彈窗 ====================
+        function openEventModal() {
+            const modal = document.getElementById('event-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeEventModal() {
+            const modal = document.getElementById('event-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function showEventDetail(card) {
+            const box = document.getElementById('event-detail-box');
+            const details = {
+                'J': '<strong>💨 抽到 J【強風事件】：</strong><br>一陣強風吹過草地！你本回合放在「暫存區」的所有自然能量牌全部吹散失去，本回合強制結束，換下一位玩家。（安全區能量不受影響）',
+                'Q': '<strong>⛈️ 抽到 Q【暴雨事件】：</strong><br>森林突然下起傾盆大雨！你本回合放在「暫存區」的所有自然能量牌全數流失，本回合強制結束，換下一位玩家。（安全區能量不受影響）',
+                'K': '<strong>🍂 抽到 K【棲地變化】：</strong><br>自然環境發生變遷！你本回合放在「暫存區」的所有自然能量牌無法保留，本回合強制結束，換下一位玩家。（安全區能量不受影響）'
+            };
+            box.innerHTML = details[card];
+        }
+
+        function openResetConfirm() {
+            document.getElementById('reset-modal').classList.remove('hidden');
+            document.getElementById('reset-modal').classList.add('flex');
+        }
+
+        function closeResetConfirm() {
+            document.getElementById('reset-modal').classList.add('hidden');
+            document.getElementById('reset-modal').classList.remove('flex');
+        }
+
+        function confirmResetScores() {
+            players = players.map(p => ({
+                ...p,
+                score: 0,
+                completedBugs: [],
+                bonusCount: 0,
+                safeEnergy: { '♥': 0, '♠': 0, '♦': 0, '♣': 0 }
+            }));
+            savePlayers();
+            renderPlayers();
+            closeResetConfirm();
+            showToast('所有探險隊員的分數與能量已重置！');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.remove('opacity-0');
+            clearTimeout(window.toastTimer);
+            window.toastTimer = setTimeout(() => {
+                toast.classList.add('opacity-0');
+            }, 3000);
+        }
+
+        // 初始化頁面
+        window.onload = function() {
+            renderInsects();
+            renderQuiz();
+            renderPlayers();
+        };
+    </script>
+</body>
+</html>
